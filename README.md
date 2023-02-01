@@ -1,5 +1,5 @@
 # CREStereo for the CMES sensor system
-This repository is forked from https://github.com/ibaiGorordo/CREStereo-Pytorch and modified for our sensor system.
+This repository is forked from https://github.com/ibaiGorordo/CREStereo-Pytorch and modified for our sensor system. Please read below if you want to know about the original codes.
 
 
 # CREStereo-Pytorch
