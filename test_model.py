@@ -75,11 +75,11 @@ def visualize(disp):
 
 
 if __name__ == '__main__':
-	path = "D:/datasets/cmes_data/20230119/top_view/cam3/rgb/"
+	path = "Y:/cmes_data/cmes_sensors_box/20230131_prevzed/"
 	file_list = os.listdir(path)
 
-	left_img_list = [left for left in file_list if left.endswith("left.png")]
-	right_img_list = [right for right in file_list if right.endswith("right.png")]
+	left_img_list = [left for left in file_list if left.endswith("color.png")]
+	right_img_list = [right for right in file_list if right.endswith("color_R.png")]
 
 	model_path = "models/crestereo_eth3d.pth"
 	model = Model(max_disp=256, mixed_precision=False, test_mode=True)
@@ -91,22 +91,12 @@ if __name__ == '__main__':
 		left_img = cv2.imread(path + left_img_name)
 		right_img = cv2.imread(path + right_img_name)
 
-		# undistorted_left = cv2.undistort(left_img, left_intrinsic, left_distortion)
-		# undistorted_right = cv2.undistort(right_img, right_intrinsic, right_distortion)
-		undistorted_left = left_img
-		undistorted_right = right_img
-
 		start = time.time()
-		disp = inference_init(undistorted_left, undistorted_right, model, n_iter=20)
+		disp = inference_init(left_img, right_img, model, n_iter=20)
 		print(time.time() - start)
+		visualize(disp)
 
-		# save_name_left = path + left_img_name.split("_")[0] + "_undistorted_left.png"
-		# save_name_right = path + left_img_name.split("_")[0] + "_undistorted_right.png"
 		splitted = left_img_name.split("_")
 		save_name_disp = path + splitted[0] + "_" + splitted[1] + "_crestereo.png"
 
-		# cv2.imwrite(save_name_left, undistorted_left)
-		# cv2.imwrite(save_name_right, undistorted_right)
 		cv2.imwrite(save_name_disp, disp)
-
-
