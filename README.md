@@ -1,3 +1,7 @@
+# CREStereo for the CMES sensor system
+This repository is forked from https://github.com/ibaiGorordo/CREStereo-Pytorch and modified for our sensor system.
+
+
 # CREStereo-Pytorch
  Non-official Pytorch implementation of the CREStereo (CVPR 2022 Oral) model converted from the original MegEngine implementation.
 
