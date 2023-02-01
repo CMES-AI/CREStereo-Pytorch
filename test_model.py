@@ -1,16 +1,17 @@
+import cv2
+import numpy as np
+import os
+import sys
+import time
 import torch
 import torch.nn.functional as F
-import numpy as np
-import cv2
-from imread_from_url import imread_from_url
 
 from nets import Model
 
 device = 'cuda'
 
 #Ref: https://github.com/megvii-research/CREStereo/blob/master/test.py
-def inference(left, right, model, n_iter=20):
-
+def inference_init(left, right, model, n_iter=20):
 	print("Model Forwarding...")
 	imgL = left.transpose(2, 0, 1)
 	imgR = right.transpose(2, 0, 1)
@@ -35,11 +36,43 @@ def inference(left, right, model, n_iter=20):
 	# print(imgR_dw2.shape)
 	with torch.inference_mode():
 		pred_flow_dw2 = model(imgL_dw2, imgR_dw2, iters=n_iter, flow_init=None)
-
 		pred_flow = model(imgL, imgR, iters=n_iter, flow_init=pred_flow_dw2)
-	pred_disp = torch.squeeze(pred_flow[:, 0, :, :]).cpu().detach().numpy()
 
-	return pred_disp
+	pred_disp = torch.squeeze(pred_flow[:, 0, :, :]).cpu().detach().numpy()
+	final_disp = (pred_disp * 100.0).astype("uint16")
+
+	return final_disp
+
+def inference_realtime(left, right, model, init_pred_flow, n_iter=20):
+	imgL = left.transpose(2, 0, 1)
+	imgR = right.transpose(2, 0, 1)
+	imgL = np.ascontiguousarray(imgL[None, :, :, :])
+	imgR = np.ascontiguousarray(imgR[None, :, :, :])
+
+	imgL = torch.tensor(imgL.astype("float32")).to(device)
+	imgR = torch.tensor(imgR.astype("float32")).to(device)
+
+	with torch.inference_mode():
+		pred_flow = model(imgL, imgR, iters=n_iter, flow_init=init_pred_flow)
+
+	pred_disp = torch.squeeze(pred_flow[:, 0, :, :]).cpu().detach().numpy()
+	final_disp = (pred_disp * 100.0).astype("uint16")
+
+	return final_disp
+
+def visualize(disp):
+	baseline = 75.0
+	focal_length = 860.0
+	depth = baseline * focal_length / (disp + sys.float_info.epsilon)
+
+	disp_vis = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+	disp_vis = disp_vis.astype("uint8")
+	disp_vis = cv2.applyColorMap(disp_vis, cv2.COLORMAP_INFERNO)
+
+	cv2.namedWindow("output", cv2.WINDOW_NORMAL)
+	cv2.imshow("output", disp_vis)
+	cv2.waitKey(0)
+
 
 if __name__ == '__main__':
 
